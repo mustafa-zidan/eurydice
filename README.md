@@ -2,8 +2,8 @@
 
 > *Named after Orpheus's wife in Greek mythology. Like Orpheus who tried to bring Eurydice back from the underworld, this library brings text to life through speech.*
 
-[![PyPI version](https://badge.fury.io/py/eurydice.svg)](https://badge.fury.io/py/eurydice)
-[![Python Versions](https://img.shields.io/pypi/pyversions/eurydice.svg)](https://pypi.org/project/eurydice/)
+[![PyPI version](https://badge.fury.io/py/eurydice-tts.svg)](https://badge.fury.io/py/eurydice-tts)
+[![Python Versions](https://img.shields.io/pypi/pyversions/eurydice-tts.svg)](https://pypi.org/project/eurydice-tts/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Tests](https://github.com/mustafazidan/eurydice/actions/workflows/test.yml/badge.svg)](https://github.com/mustafazidan/eurydice/actions/workflows/test.yml)
 
@@ -22,16 +22,16 @@ A Python library for text-to-speech using the Orpheus TTS model, featuring audio
 
 ```bash
 # Basic installation (requires external LM Studio server)
-uv add eurydice
+uv add eurydice-tts
 
 # With audio decoding support (recommended)
-uv add eurydice[audio]
+uv add eurydice-tts[audio]
 
 # For development
-uv add eurydice[dev]
+uv add eurydice-tts[dev]
 
 # All extras
-uv add eurydice[all]
+uv add eurydice-tts[all]
 ```
 
 ## Quick Start
@@ -265,27 +265,27 @@ git clone https://github.com/mustafazidan/eurydice.git
 cd eurydice
 uv venv
 source .venv/bin/activate
-uv pip install -e ".[dev]"
+uv sync --all-extras
 ```
 
 ### Running Tests
 
 ```bash
 # Run all tests
-pytest tests/ -v
+uv run pytest tests/ -v
 
 # With coverage
-pytest tests/ --cov=eurydice --cov-report=html
+uv run pytest tests/ --cov=eurydice --cov-report=html
 
 # Run specific test
-pytest tests/test_types.py -v
+uv run pytest tests/test_types.py -v
 ```
 
 ### Linting
 
 ```bash
-ruff check .
-ruff format .
+uv run ruff check .
+uv run ruff format .
 ```
 
 ## Contributing

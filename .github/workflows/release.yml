@@ -43,19 +43,20 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
-        run: |
-          pip install build hatch hatch-vcs
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
       - name: Create and push tag
         run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "v${{ inputs.version }}" -m "Release v${{ inputs.version }}"
           git push origin "v${{ inputs.version }}"
 
       - name: Build package
-        run: python -m build
+        run: uv build
 
       - name: Generate release notes
         id: release_notes
@@ -73,7 +74,12 @@ jobs:
           echo "## Installation" >> release_notes.md
           echo "" >> release_notes.md
           echo "\`\`\`bash" >> release_notes.md
-          echo "pip install eurydice==${{ inputs.version }}" >> release_notes.md
+          echo "pip install eurydice-tts==${{ inputs.version }}" >> release_notes.md
+          echo "\`\`\`" >> release_notes.md
+          echo "" >> release_notes.md
+          echo "Or with uv:" >> release_notes.md
+          echo "\`\`\`bash" >> release_notes.md
+          echo "uv add eurydice-tts==${{ inputs.version }}" >> release_notes.md
           echo "\`\`\`" >> release_notes.md
 
       - name: Create GitHub Release

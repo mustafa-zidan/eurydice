@@ -330,7 +330,7 @@ wheels = [
 ]
 
 [[package]]
-name = "eurydice"
+name = "eurydice-tts"
 source = { editable = "." }
 dependencies = [
     { name = "httpx" },
