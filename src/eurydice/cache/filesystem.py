@@ -34,7 +34,7 @@ class FilesystemCache(Cache):
         return audio_path, meta_path
 
     async def get(self, key: str) -> AudioResult | None:
-        """Get item from cache."""
+        """Get item from the cache."""
         audio_path, meta_path = self._get_paths(key)
 
         if not audio_path.exists() or not meta_path.exists():
@@ -101,7 +101,7 @@ class FilesystemCache(Cache):
         return deleted
 
     async def clear(self) -> int:
-        """Clear all items from cache."""
+        """Clear all items from the cache."""
         count = 0
         for f in self.cache_dir.glob("*.wav"):
             f.unlink()
@@ -111,7 +111,7 @@ class FilesystemCache(Cache):
         return count
 
     async def contains(self, key: str) -> bool:
-        """Check if key exists and is valid."""
+        """Check if the key exists and is valid."""
         audio_path, _ = self._get_paths(key)
         if not audio_path.exists():
             return False
@@ -120,7 +120,7 @@ class FilesystemCache(Cache):
         return result is not None
 
     def cache_size_bytes(self) -> int:
-        """Get total size of cached files in bytes."""
+        """Get the total size of cached files in bytes."""
         total = 0
         for f in self.cache_dir.glob("*.wav"):
             total += f.stat().st_size
