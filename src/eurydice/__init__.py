@@ -30,6 +30,15 @@ With caching:
         # Second call returns cached audio
         audio2 = await tts.generate("Hello!")
         assert audio2.cached == True
+
+With embedded provider (no external server needed):
+    from eurydice import Eurydice, TTSConfig
+
+    config = TTSConfig(provider="embedded")
+
+    async with Eurydice(config) as tts:
+        audio = await tts.generate("Hello from local model!")
+        audio.save("hello.wav")
 """
 
 # Audio utilities
@@ -52,7 +61,7 @@ from eurydice.exceptions import (
 )
 
 # Providers
-from eurydice.providers import LMStudioProvider, Provider
+from eurydice.providers import EmbeddedProvider, LMStudioProvider, Provider
 from eurydice.types import AudioFormat, AudioResult, Voice
 
 __version__ = "0.1.0"
@@ -81,6 +90,7 @@ __all__ = [
     "DependencyError",
     # Providers
     "Provider",
+    "EmbeddedProvider",
     "LMStudioProvider",
     # Cache
     "Cache",

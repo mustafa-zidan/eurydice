@@ -13,7 +13,7 @@ A Python library for text-to-speech using the Orpheus TTS model, featuring audio
 
 - 🎤 **8 High-Quality Voices** - tara, leah, jess, leo, dan, mia, zac, zoe
 - ⚡ **Audio Caching** - Memory and filesystem caching to avoid regenerating audio
-- 🔌 **Provider Abstraction** - Support for LM Studio (Ollama and embedded coming soon)
+- 🔌 **Provider Abstraction** - Support for LM Studio and embedded local inference
 - 🔄 **Async-First** - Built for async/await with sync wrappers for convenience
 - 📦 **Type Hints** - Full type annotations throughout
 - 🧪 **Well Tested** - Comprehensive test suite
@@ -26,6 +26,9 @@ uv add eurydice-tts
 
 # With audio decoding support (recommended)
 uv add eurydice-tts[audio]
+
+# With embedded model support (runs locally, no external server needed)
+uv add eurydice-tts[embedded]
 
 # For development
 uv add eurydice-tts[dev]
@@ -242,10 +245,37 @@ provider = LMStudioProvider(
 )
 ```
 
+### Embedded Provider
+
+Run models locally without any external server. This provider loads the Orpheus model directly using transformers:
+
+```python
+from eurydice import Eurydice, TTSConfig, EmbeddedProvider
+
+# Using config
+config = TTSConfig(provider="embedded")
+async with Eurydice(config) as tts:
+    audio = await tts.generate("Hello from local model!")
+    audio.save("hello.wav")
+
+# Or using provider directly
+provider = EmbeddedProvider(
+    model="canopylabs/orpheus-3b-0.1-ft",  # HuggingFace model ID
+    device="cuda",  # or "mps" for Apple Silicon, "cpu" for CPU
+    torch_dtype="auto",  # or "float16", "bfloat16", "float32"
+)
+
+async with Eurydice(provider=provider) as tts:
+    audio = await tts.generate("Hello!")
+```
+
+**Requirements:** Install with `uv add eurydice-tts[embedded]` to get the required dependencies (transformers, accelerate, torch).
+
+**Device auto-detection:** If no device is specified, the provider automatically detects the best available device (CUDA > MPS > CPU).
+
 ### Coming Soon
 
 - **Ollama Provider** - For Ollama-hosted models
-- **Embedded Provider** - Run models locally without external servers
 
 ## Examples
 

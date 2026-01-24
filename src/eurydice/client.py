@@ -11,6 +11,7 @@ from eurydice.cache.memory import MemoryCache
 from eurydice.config import GenerationParams, TTSConfig
 from eurydice.exceptions import AudioDecodingError, EurydiceError
 from eurydice.providers.base import Provider
+from eurydice.providers.embedded import EmbeddedProvider
 from eurydice.providers.lmstudio import LMStudioProvider
 from eurydice.types import AudioFormat, AudioResult, Voice
 
@@ -43,6 +44,7 @@ class Eurydice:
     # Provider registry
     PROVIDERS: dict[str, type[Provider]] = {
         "lmstudio": LMStudioProvider,
+        "embedded": EmbeddedProvider,
     }
 
     def __init__(
