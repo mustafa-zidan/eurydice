@@ -1,8 +1,9 @@
 """Tests for filesystem cache."""
 
 import pytest
-from orpheus_tts.cache import FilesystemCache
-from orpheus_tts import AudioResult, AudioFormat, Voice
+
+from eurydice import AudioFormat, AudioResult, Voice
+from eurydice.cache import FilesystemCache
 
 
 @pytest.fixture
@@ -87,3 +88,9 @@ class TestFilesystemCache:
         await filesystem_cache.set("key1", sample_audio)
         size_after = filesystem_cache.cache_size_bytes()
         assert size_after > 0
+
+    @pytest.mark.asyncio
+    async def test_close(self, filesystem_cache):
+        """Test closing the cache."""
+        # For FilesystemCache, close() is a pass but should be awaitable
+        await filesystem_cache.close()

@@ -1,7 +1,6 @@
 """Tests for types module."""
 
-import pytest
-from orpheus_tts import Voice, AudioFormat, AudioResult
+from eurydice import AudioFormat, Voice
 
 
 class TestVoice:

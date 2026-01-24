@@ -1,8 +1,6 @@
 """SNAC decoder for converting tokens to audio."""
 
-from typing import Optional, List
-
-from orpheus_tts.exceptions import DependencyError
+from eurydice.exceptions import DependencyError
 
 # Try to import SNAC dependencies
 _snac_available = False
@@ -10,9 +8,9 @@ _snac_model = None
 _snac_device = "cpu"
 
 try:
-    import torch
-    import numpy as np
-    from snac import SNAC
+    import numpy as np  # noqa: F401
+    import torch  # noqa: F401
+    from snac import SNAC  # noqa: F401
 
     _snac_available = True
 except ImportError:
@@ -27,7 +25,7 @@ def is_audio_available() -> bool:
 class SNACDecoder:
     """Wrapper for SNAC audio decoder."""
 
-    def __init__(self, device: Optional[str] = None):
+    def __init__(self, device: str | None = None):
         """
         Initialize the SNAC decoder.
 
@@ -35,10 +33,7 @@ class SNACDecoder:
             device: Device to use ("cpu", "cuda", "mps", or None for auto-detect)
         """
         if not _snac_available:
-            raise DependencyError(
-                "torch, numpy, snac",
-                "uv install orpheus-tts[audio]"
-            )
+            raise DependencyError("torch, numpy, snac", "uv install eurydice[audio]")
 
         self._model = None
         self._device = device or self._detect_device()
@@ -58,7 +53,6 @@ class SNACDecoder:
         if self._model is not None:
             return
 
-        import torch
         from snac import SNAC
 
         self._model = SNAC.from_pretrained("hubertsiuzdak/snac_24khz").eval()
@@ -69,7 +63,7 @@ class SNACDecoder:
         """Get the device being used."""
         return self._device
 
-    def decode_frame(self, multiframe: List[int]) -> Optional[bytes]:
+    def decode_frame(self, multiframe: list[int]) -> bytes | None:
         """
         Convert token frames to audio bytes.
 
@@ -84,8 +78,8 @@ class SNACDecoder:
 
         self._ensure_model()
 
-        import torch
         import numpy as np
+        import torch
 
         codes_0 = torch.tensor([], device=self._device, dtype=torch.int32)
         codes_1 = torch.tensor([], device=self._device, dtype=torch.int32)
@@ -97,9 +91,7 @@ class SNACDecoder:
         for j in range(num_frames):
             i = 7 * j
             if codes_0.shape[0] == 0:
-                codes_0 = torch.tensor(
-                    [frame[i]], device=self._device, dtype=torch.int32
-                )
+                codes_0 = torch.tensor([frame[i]], device=self._device, dtype=torch.int32)
             else:
                 codes_0 = torch.cat(
                     [
@@ -109,94 +101,70 @@ class SNACDecoder:
                 )
 
             if codes_1.shape[0] == 0:
-                codes_1 = torch.tensor(
-                    [frame[i + 1]], device=self._device, dtype=torch.int32
-                )
+                codes_1 = torch.tensor([frame[i + 1]], device=self._device, dtype=torch.int32)
                 codes_1 = torch.cat(
                     [
                         codes_1,
-                        torch.tensor(
-                            [frame[i + 4]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 4]], device=self._device, dtype=torch.int32),
                     ]
                 )
             else:
                 codes_1 = torch.cat(
                     [
                         codes_1,
-                        torch.tensor(
-                            [frame[i + 1]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 1]], device=self._device, dtype=torch.int32),
                     ]
                 )
                 codes_1 = torch.cat(
                     [
                         codes_1,
-                        torch.tensor(
-                            [frame[i + 4]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 4]], device=self._device, dtype=torch.int32),
                     ]
                 )
 
             if codes_2.shape[0] == 0:
-                codes_2 = torch.tensor(
-                    [frame[i + 2]], device=self._device, dtype=torch.int32
-                )
+                codes_2 = torch.tensor([frame[i + 2]], device=self._device, dtype=torch.int32)
                 codes_2 = torch.cat(
                     [
                         codes_2,
-                        torch.tensor(
-                            [frame[i + 3]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 3]], device=self._device, dtype=torch.int32),
                     ]
                 )
                 codes_2 = torch.cat(
                     [
                         codes_2,
-                        torch.tensor(
-                            [frame[i + 5]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 5]], device=self._device, dtype=torch.int32),
                     ]
                 )
                 codes_2 = torch.cat(
                     [
                         codes_2,
-                        torch.tensor(
-                            [frame[i + 6]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 6]], device=self._device, dtype=torch.int32),
                     ]
                 )
             else:
                 codes_2 = torch.cat(
                     [
                         codes_2,
-                        torch.tensor(
-                            [frame[i + 2]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 2]], device=self._device, dtype=torch.int32),
                     ]
                 )
                 codes_2 = torch.cat(
                     [
                         codes_2,
-                        torch.tensor(
-                            [frame[i + 3]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 3]], device=self._device, dtype=torch.int32),
                     ]
                 )
                 codes_2 = torch.cat(
                     [
                         codes_2,
-                        torch.tensor(
-                            [frame[i + 5]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 5]], device=self._device, dtype=torch.int32),
                     ]
                 )
                 codes_2 = torch.cat(
                     [
                         codes_2,
-                        torch.tensor(
-                            [frame[i + 6]], device=self._device, dtype=torch.int32
-                        ),
+                        torch.tensor([frame[i + 6]], device=self._device, dtype=torch.int32),
                     ]
                 )
 

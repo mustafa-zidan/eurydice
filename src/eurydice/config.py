@@ -1,10 +1,8 @@
-"""Configuration for orpheus-tts."""
+"""Configuration for eurydice."""
 
 from dataclasses import dataclass, field
-from typing import Optional
 
-from orpheus_tts.types import Voice
-
+from eurydice.types import Voice
 
 # Audio constants
 SAMPLE_RATE = 24000  # SNAC model uses 24kHz
@@ -26,7 +24,7 @@ class TTSConfig:
 
     # Provider settings
     provider: str = "lmstudio"  # "lmstudio", "ollama", "embedded"
-    server_url: Optional[str] = None  # Auto-detected if None
+    server_url: str | None = None  # Auto-detected if None
     model: str = "orpheus-3b-0.1-ft"
 
     # Default voice
@@ -37,7 +35,7 @@ class TTSConfig:
 
     # Caching
     cache_enabled: bool = True
-    cache_ttl_seconds: Optional[int] = None  # None = no expiry
+    cache_ttl_seconds: int | None = None  # None = no expiry
 
     # Audio settings
     sample_rate: int = SAMPLE_RATE

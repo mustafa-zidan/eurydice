@@ -1,9 +1,11 @@
 """Tests for memory cache."""
 
-import pytest
 import time
-from orpheus_tts.cache import MemoryCache
-from orpheus_tts import AudioResult, AudioFormat, Voice
+
+import pytest
+
+from eurydice import AudioFormat, AudioResult, Voice
+from eurydice.cache import MemoryCache
 
 
 @pytest.fixture
@@ -101,3 +103,11 @@ class TestMemoryCache:
 
         await memory_cache.set("key2", sample_audio)
         assert memory_cache.size == 2
+
+    @pytest.mark.asyncio
+    async def test_close(self, memory_cache, sample_audio):
+        """Test closing the cache."""
+        await memory_cache.set("key1", sample_audio)
+        assert memory_cache.size == 1
+        await memory_cache.close()
+        assert memory_cache.size == 0

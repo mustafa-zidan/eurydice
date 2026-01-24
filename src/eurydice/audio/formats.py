@@ -2,9 +2,8 @@
 
 import io
 import wave
-from typing import Optional
 
-from orpheus_tts.config import SAMPLE_RATE
+from eurydice.config import SAMPLE_RATE
 
 
 def create_wav(

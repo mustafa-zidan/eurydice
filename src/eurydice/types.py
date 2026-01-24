@@ -1,9 +1,8 @@
-"""Core types for orpheus-tts."""
+"""Core types for eurydice."""
 
+import base64
 from dataclasses import dataclass
 from enum import Enum
-from typing import Optional
-import base64
 
 
 class Voice(str, Enum):

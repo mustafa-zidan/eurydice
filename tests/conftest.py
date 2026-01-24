@@ -1,18 +1,18 @@
-"""Pytest fixtures for orpheus-tts tests."""
+"""Pytest fixtures for Eurydice tests."""
+
+from collections.abc import AsyncIterator
 
 import pytest
-from typing import AsyncIterator, Optional
 
-from orpheus_tts import (
-    OrpheusTTS,
+from eurydice import (
+    AudioFormat,
+    AudioResult,
+    GenerationParams,
     TTSConfig,
     Voice,
-    AudioResult,
-    AudioFormat,
-    GenerationParams,
 )
-from orpheus_tts.providers.base import Provider
-from orpheus_tts.cache import MemoryCache, FilesystemCache
+from eurydice.cache import FilesystemCache, MemoryCache
+from eurydice.providers.base import Provider
 
 
 class MockProvider(Provider):

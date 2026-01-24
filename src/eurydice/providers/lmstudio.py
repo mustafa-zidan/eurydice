@@ -1,14 +1,14 @@
 """LM Studio inference provider."""
 
 import json
-from typing import AsyncIterator, Optional
+from collections.abc import AsyncIterator
 
 import httpx
 
-from orpheus_tts.config import GenerationParams
-from orpheus_tts.exceptions import ConnectionError, ProviderError
-from orpheus_tts.providers.base import Provider
-from orpheus_tts.types import Voice
+from eurydice.config import GenerationParams
+from eurydice.exceptions import ConnectionError, ProviderError
+from eurydice.providers.base import Provider
+from eurydice.types import Voice
 
 
 class LMStudioProvider(Provider):
@@ -31,7 +31,7 @@ class LMStudioProvider(Provider):
         self.server_url = server_url.rstrip("/")
         self.model = model
         self.timeout = timeout
-        self._client: Optional[httpx.AsyncClient] = None
+        self._client: httpx.AsyncClient | None = None
 
     @property
     def name(self) -> str:

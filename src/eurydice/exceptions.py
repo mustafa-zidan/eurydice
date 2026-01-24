@@ -1,19 +1,23 @@
-"""Exception hierarchy for orpheus-tts."""
+"""Exception hierarchy for Eurydice."""
 
 
-class OrpheusError(Exception):
-    """Base exception for all orpheus-tts errors."""
+class EurydiceError(Exception):
+    """Base exception for all Eurydice errors."""
 
     pass
 
 
-class ConfigurationError(OrpheusError):
+# Backwards compatibility alias
+OrpheusError = EurydiceError
+
+
+class ConfigurationError(EurydiceError):
     """Invalid configuration."""
 
     pass
 
 
-class ProviderError(OrpheusError):
+class ProviderError(EurydiceError):
     """Error from inference provider."""
 
     pass
@@ -31,25 +35,24 @@ class ModelNotFoundError(ProviderError):
     pass
 
 
-class AudioDecodingError(OrpheusError):
+class AudioDecodingError(EurydiceError):
     """Error decoding audio from tokens."""
 
     pass
 
 
-class CacheError(OrpheusError):
+class CacheError(EurydiceError):
     """Error with cache operations."""
 
     pass
 
 
-class DependencyError(OrpheusError):
+class DependencyError(EurydiceError):
     """Required dependency not installed."""
 
     def __init__(self, package: str, install_hint: str = ""):
         self.package = package
         self.install_hint = install_hint or f"pip install {package}"
         super().__init__(
-            f"Required package '{package}' not installed. "
-            f"Install with: {self.install_hint}"
+            f"Required package '{package}' not installed. Install with: {self.install_hint}"
         )

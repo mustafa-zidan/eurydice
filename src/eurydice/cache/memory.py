@@ -2,10 +2,9 @@
 
 import time
 from collections import OrderedDict
-from typing import Optional, Tuple
 
-from orpheus_tts.cache.base import Cache
-from orpheus_tts.types import AudioResult, AudioFormat, Voice
+from eurydice.cache.base import Cache
+from eurydice.types import AudioResult
 
 
 class MemoryCache(Cache):
@@ -14,7 +13,7 @@ class MemoryCache(Cache):
     def __init__(
         self,
         max_size: int = 100,
-        default_ttl_seconds: Optional[int] = None,
+        default_ttl_seconds: int | None = None,
     ):
         """
         Initialize memory cache.
@@ -25,11 +24,9 @@ class MemoryCache(Cache):
         """
         self.max_size = max_size
         self.default_ttl = default_ttl_seconds
-        self._cache: OrderedDict[str, Tuple[AudioResult, Optional[float]]] = (
-            OrderedDict()
-        )
+        self._cache: OrderedDict[str, tuple[AudioResult, float | None]] = OrderedDict()
 
-    async def get(self, key: str) -> Optional[AudioResult]:
+    async def get(self, key: str) -> AudioResult | None:
         """Get item from cache."""
         if key not in self._cache:
             return None
@@ -58,13 +55,13 @@ class MemoryCache(Cache):
         self,
         key: str,
         audio: AudioResult,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
     ) -> None:
         """Store item in cache."""
         ttl = ttl_seconds if ttl_seconds is not None else self.default_ttl
         expires_at = time.time() + ttl if ttl else None
 
-        # Remove oldest if at capacity
+        # Remove the oldest if at capacity
         while len(self._cache) >= self.max_size:
             self._cache.popitem(last=False)
 
@@ -92,3 +89,7 @@ class MemoryCache(Cache):
     def size(self) -> int:
         """Current number of items in cache."""
         return len(self._cache)
+
+    async def close(self) -> None:
+        """Clean up resources."""
+        self._cache.clear()

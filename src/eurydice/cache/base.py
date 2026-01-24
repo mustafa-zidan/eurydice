@@ -1,16 +1,15 @@
 """Abstract base class for cache implementations."""
 
 from abc import ABC, abstractmethod
-from typing import Optional
 
-from orpheus_tts.types import AudioResult
+from eurydice.types import AudioResult
 
 
 class Cache(ABC):
     """Abstract base class for audio caching."""
 
     @abstractmethod
-    async def get(self, key: str) -> Optional[AudioResult]:
+    async def get(self, key: str) -> AudioResult | None:
         """
         Retrieve cached audio by key.
 
@@ -27,7 +26,7 @@ class Cache(ABC):
         self,
         key: str,
         audio: AudioResult,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
     ) -> None:
         """
         Store audio in cache.
@@ -75,6 +74,7 @@ class Cache(ABC):
         """
         pass
 
+    @abstractmethod
     async def close(self) -> None:
         """Clean up resources. Override if needed."""
         pass

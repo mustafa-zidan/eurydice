@@ -2,8 +2,8 @@
 
 import hashlib
 
-from orpheus_tts.config import GenerationParams
-from orpheus_tts.types import Voice
+from eurydice.config import GenerationParams
+from eurydice.types import Voice
 
 
 def generate_cache_key(

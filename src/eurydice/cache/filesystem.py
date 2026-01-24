@@ -1,13 +1,11 @@
 """Filesystem-based cache implementation."""
 
 import json
-import os
 import time
 from pathlib import Path
-from typing import Optional, Tuple
 
-from orpheus_tts.cache.base import Cache
-from orpheus_tts.types import AudioResult, AudioFormat, Voice
+from eurydice.cache.base import Cache
+from eurydice.types import AudioFormat, AudioResult, Voice
 
 
 class FilesystemCache(Cache):
@@ -15,8 +13,8 @@ class FilesystemCache(Cache):
 
     def __init__(
         self,
-        cache_dir: str = "~/.orpheus-tts/cache",
-        default_ttl_seconds: Optional[int] = None,
+        cache_dir: str = "~/.eurydice/cache",
+        default_ttl_seconds: int | None = None,
     ):
         """
         Initialize filesystem cache.
@@ -29,13 +27,13 @@ class FilesystemCache(Cache):
         self.default_ttl = default_ttl_seconds
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-    def _get_paths(self, key: str) -> Tuple[Path, Path]:
+    def _get_paths(self, key: str) -> tuple[Path, Path]:
         """Get paths for audio and metadata files."""
         audio_path = self.cache_dir / f"{key}.wav"
         meta_path = self.cache_dir / f"{key}.json"
         return audio_path, meta_path
 
-    async def get(self, key: str) -> Optional[AudioResult]:
+    async def get(self, key: str) -> AudioResult | None:
         """Get item from cache."""
         audio_path, meta_path = self._get_paths(key)
 
@@ -43,14 +41,13 @@ class FilesystemCache(Cache):
             return None
 
         try:
-            with open(meta_path, "r") as f:
+            with open(meta_path) as f:
                 meta = json.load(f)
 
             # Check expiration
-            if meta.get("expires_at"):
-                if time.time() > meta["expires_at"]:
-                    await self.delete(key)
-                    return None
+            if meta.get("expires_at") and time.time() > meta["expires_at"]:
+                await self.delete(key)
+                return None
 
             with open(audio_path, "rb") as f:
                 audio_data = f.read()
@@ -70,7 +67,7 @@ class FilesystemCache(Cache):
         self,
         key: str,
         audio: AudioResult,
-        ttl_seconds: Optional[int] = None,
+        ttl_seconds: int | None = None,
     ) -> None:
         """Store item in cache."""
         audio_path, meta_path = self._get_paths(key)
@@ -128,3 +125,7 @@ class FilesystemCache(Cache):
         for f in self.cache_dir.glob("*.wav"):
             total += f.stat().st_size
         return total
+
+    async def close(self) -> None:
+        """Clean up resources."""
+        pass

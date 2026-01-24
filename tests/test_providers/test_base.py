@@ -1,7 +1,8 @@
 """Tests for provider base class."""
 
 import pytest
-from orpheus_tts import Voice, GenerationParams
+
+from eurydice import GenerationParams, Voice
 
 
 class TestMockProvider:
@@ -24,9 +25,7 @@ class TestMockProvider:
         mock_provider.set_tokens(["token1", "token2", "token3"])
 
         tokens = []
-        async for token in mock_provider.generate_tokens(
-            "test", Voice.LEO, GenerationParams()
-        ):
+        async for token in mock_provider.generate_tokens("test", Voice.LEO, GenerationParams()):
             tokens.append(token)
 
         assert tokens == ["token1", "token2", "token3"]

@@ -1,56 +1,58 @@
-"""Main OrpheusTTS client."""
+"""Main Eurydice TTS client."""
 
 import asyncio
-from typing import Optional, Type
 
-from orpheus_tts.audio.decoder import SNACDecoder, is_audio_available
-from orpheus_tts.audio.formats import create_wav, calculate_duration
-from orpheus_tts.audio.tokens import TokenProcessor
-from orpheus_tts.cache.base import Cache
-from orpheus_tts.cache.key import generate_cache_key
-from orpheus_tts.cache.memory import MemoryCache
-from orpheus_tts.config import TTSConfig, GenerationParams
-from orpheus_tts.exceptions import AudioDecodingError, OrpheusError
-from orpheus_tts.providers.base import Provider
-from orpheus_tts.providers.lmstudio import LMStudioProvider
-from orpheus_tts.types import AudioFormat, AudioResult, Voice
+from eurydice.audio.decoder import SNACDecoder, is_audio_available
+from eurydice.audio.formats import calculate_duration, create_wav
+from eurydice.audio.tokens import TokenProcessor
+from eurydice.cache.base import Cache
+from eurydice.cache.key import generate_cache_key
+from eurydice.cache.memory import MemoryCache
+from eurydice.config import GenerationParams, TTSConfig
+from eurydice.exceptions import AudioDecodingError, EurydiceError
+from eurydice.providers.base import Provider
+from eurydice.providers.lmstudio import LMStudioProvider
+from eurydice.types import AudioFormat, AudioResult, Voice
 
 
-class OrpheusTTS:
+class Eurydice:
     """
-    Main client for Orpheus TTS.
+    Main client for Eurydice TTS.
+
+    Named after Orpheus's wife in Greek mythology, this library brings text to life
+    through speech, serving as a bridge to the Orpheus TTS model.
 
     Example usage:
         # Simple async usage
-        async with OrpheusTTS() as tts:
+        async with Eurydice() as tts:
             audio = await tts.generate("Hello, world!")
             audio.save("hello.wav")
 
         # With custom configuration
         config = TTSConfig(provider="lmstudio", cache_enabled=True)
-        tts = OrpheusTTS(config)
+        tts = Eurydice(config)
         await tts.connect()
         audio = await tts.generate("Hello!", voice=Voice.TARA)
         await tts.close()
 
         # Sync usage
-        tts = OrpheusTTS()
+        tts = Eurydice()
         audio = tts.generate_sync("Hello, world!")
     """
 
     # Provider registry
-    PROVIDERS: dict[str, Type[Provider]] = {
+    PROVIDERS: dict[str, type[Provider]] = {
         "lmstudio": LMStudioProvider,
     }
 
     def __init__(
         self,
-        config: Optional[TTSConfig] = None,
-        provider: Optional[Provider] = None,
-        cache: Optional[Cache] = None,
+        config: TTSConfig | None = None,
+        provider: Provider | None = None,
+        cache: Cache | None = None,
     ):
         """
-        Initialize the OrpheusTTS client.
+        Initialize the Eurydice client.
 
         Args:
             config: TTS configuration (uses defaults if None)
@@ -74,14 +76,14 @@ class OrpheusTTS:
             self._cache = None
 
         # Audio processing (lazy loaded)
-        self._decoder: Optional[SNACDecoder] = None
+        self._decoder: SNACDecoder | None = None
         self._token_processor = TokenProcessor()
 
     def _create_provider(self) -> Provider:
         """Create provider instance from config."""
         provider_cls = self.PROVIDERS.get(self.config.provider)
         if not provider_cls:
-            raise OrpheusError(f"Unknown provider: {self.config.provider}")
+            raise EurydiceError(f"Unknown provider: {self.config.provider}")
 
         return provider_cls(
             server_url=self.config.get_server_url(),
@@ -104,8 +106,8 @@ class OrpheusTTS:
     async def generate(
         self,
         text: str,
-        voice: Optional[Voice] = None,
-        params: Optional[GenerationParams] = None,
+        voice: Voice | None = None,
+        params: GenerationParams | None = None,
         format: AudioFormat = AudioFormat.WAV,
         use_cache: bool = True,
     ) -> AudioResult:
@@ -123,7 +125,7 @@ class OrpheusTTS:
             AudioResult containing the generated audio
 
         Raises:
-            OrpheusError: If generation fails
+            EurydiceError: If generation fails
             AudioDecodingError: If audio decoding fails
         """
         voice = voice or self.config.default_voice
@@ -139,9 +141,8 @@ class OrpheusTTS:
         # Initialize decoder if needed
         if self._decoder is None:
             if not is_audio_available():
-                raise OrpheusError(
-                    "Audio dependencies not installed. "
-                    "Install with: pip install orpheus-tts[audio]"
+                raise EurydiceError(
+                    "Audio dependencies not installed. Install with: pip install eurydice[audio]"
                 )
             self._decoder = SNACDecoder()
 
@@ -152,18 +153,16 @@ class OrpheusTTS:
 
         async for token in self._provider.generate_tokens(text, voice, params):
             token_id = self._token_processor.process_token(token)
-            if token_id is not None:
-                # Convert to audio when we have enough tokens
-                if self._token_processor.has_complete_frame():
-                    frame_tokens = self._token_processor.get_frame_tokens()
-                    audio_bytes = self._decoder.decode_frame(frame_tokens)
-                    if audio_bytes:
-                        audio_segments.append(audio_bytes)
+
+            if token_id is not None and self._token_processor.has_complete_frame():
+                frame_tokens = self._token_processor.get_frame_tokens()
+                audio_bytes = self._decoder.decode_frame(frame_tokens)
+
+                if audio_bytes:
+                    audio_segments.append(audio_bytes)
 
         if not audio_segments:
-            raise AudioDecodingError(
-                "No audio generated. Check if Orpheus model is loaded."
-            )
+            raise AudioDecodingError("No audio generated. Check if Orpheus model is loaded.")
 
         # Combine and format audio
         combined = b"".join(audio_segments)
@@ -193,7 +192,7 @@ class OrpheusTTS:
     def generate_sync(
         self,
         text: str,
-        voice: Optional[Voice] = None,
+        voice: Voice | None = None,
         **kwargs,
     ) -> AudioResult:
         """
@@ -219,7 +218,7 @@ class OrpheusTTS:
         self,
         text: str,
         path: str,
-        voice: Optional[Voice] = None,
+        voice: Voice | None = None,
         **kwargs,
     ) -> AudioResult:
         """
@@ -244,7 +243,7 @@ class OrpheusTTS:
         if self._cache:
             await self._cache.close()
 
-    async def __aenter__(self) -> "OrpheusTTS":
+    async def __aenter__(self) -> "Eurydice":
         await self.connect()
         return self
 
@@ -269,3 +268,7 @@ class OrpheusTTS:
     def is_audio_available() -> bool:
         """Check if audio dependencies are installed."""
         return is_audio_available()
+
+
+# Backwards compatibility alias
+OrpheusTTS = Eurydice

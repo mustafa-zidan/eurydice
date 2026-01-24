@@ -1,1 +1,1 @@
-"""Tests for orpheus-tts."""
+"""Tests for eurydice."""

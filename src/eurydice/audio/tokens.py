@@ -1,7 +1,5 @@
 """Token parsing utilities for Orpheus TTS."""
 
-from typing import Optional
-
 # Token processing constants
 CUSTOM_TOKEN_PREFIX = "<custom_token_"
 
@@ -28,7 +26,7 @@ class TokenProcessor:
         """Get the current token count."""
         return self._count
 
-    def parse_token(self, token_string: str, index: int) -> Optional[int]:
+    def parse_token(self, token_string: str, index: int) -> int | None:
         """
         Convert token string to numeric ID for audio processing.
 
@@ -57,7 +55,7 @@ class TokenProcessor:
 
         return None
 
-    def process_token(self, token_string: str) -> Optional[int]:
+    def process_token(self, token_string: str) -> int | None:
         """
         Process a token and add it to the buffer if valid.
 

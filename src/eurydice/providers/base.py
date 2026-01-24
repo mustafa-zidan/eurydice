@@ -1,10 +1,10 @@
 """Abstract base class for inference providers."""
 
 from abc import ABC, abstractmethod
-from typing import AsyncIterator
+from collections.abc import AsyncIterator
 
-from orpheus_tts.config import GenerationParams
-from orpheus_tts.types import Voice
+from eurydice.config import GenerationParams
+from eurydice.types import Voice
 
 
 class Provider(ABC):
