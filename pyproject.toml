@@ -65,11 +65,11 @@ all = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/mustafazidan/eurydice"
-Documentation = "https://github.com/mustafazidan/eurydice#readme"
-Repository = "https://github.com/mustafazidan/eurydice"
-Issues = "https://github.com/mustafazidan/eurydice/issues"
-Changelog = "https://github.com/mustafazidan/eurydice/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/mustafa-zidan/eurydice"
+Documentation = "https://github.com/mustafa-zidan/eurydice#readme"
+Repository = "https://github.com/mustafa-zidan/eurydice"
+Issues = "https://github.com/mustafa-zidan/eurydice/issues"
+Changelog = "https://github.com/mustafa-zidan/eurydice/blob/main/CHANGELOG.md"
 
 [tool.hatch.version]
 source = "vcs"

@@ -213,11 +213,11 @@ Releases are handled by maintainers:
 1. Update version (automatic via git tags)
 2. Update CHANGELOG.md
 3. Create a GitHub release
-4. GitHub Actions automatically publishes to PyPI
+4. GitHub Actions automatically published to PyPI
 
 ## Questions?
 
-- Open a [GitHub Discussion](https://github.com/mustafazidan/eurydice/discussions)
-- Check existing [Issues](https://github.com/mustafazidan/eurydice/issues)
+- Open a [GitHub Discussion](https://github.com/mustafa-zidan/eurydice/discussions)
+- Check existing [Issues](https://github.com/mustafa-zidan/eurydice/issues)
 
 Thank you for contributing! 🎵

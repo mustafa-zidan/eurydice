@@ -2,10 +2,10 @@
 
 > *Named after Orpheus's wife in Greek mythology. Like Orpheus who tried to bring Eurydice back from the underworld, this library brings text to life through speech.*
 
-[![PyPI version](https://badge.fury.io/py/eurydice-tts.svg)](https://badge.fury.io/py/eurydice-tts)
+[![PyPI version](https://badge.fury.io/py/eurydice-tts.svg?icon=si%3Apython)](https://badge.fury.io/py/eurydice-tts)
 [![Python Versions](https://img.shields.io/pypi/pyversions/eurydice-tts.svg)](https://pypi.org/project/eurydice-tts/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Tests](https://github.com/mustafazidan/eurydice/actions/workflows/test.yml/badge.svg)](https://github.com/mustafazidan/eurydice/actions/workflows/test.yml)
+[![Tests](https://github.com/mustafa-zidan/eurydice/actions/workflows/test.yml/badge.svg)](https://github.com/mustafa-zidan/eurydice/actions/workflows/test.yml)
 
 A Python library for text-to-speech using the Orpheus TTS model, featuring audio caching and provider abstraction.
 
@@ -261,7 +261,7 @@ See the [examples/](examples/) directory for more usage examples:
 ### Setup
 
 ```bash
-git clone https://github.com/mustafazidan/eurydice.git
+git clone https://github.com/mustafa-zidan/eurydice.git
 cd eurydice
 uv venv
 source .venv/bin/activate
@@ -304,4 +304,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-Made with ❤️ by [Mustafa Abuelfadl](https://github.com/mustafazidan)
+Made with ❤️ by [Mustafa Abuelfadl](https://github.com/mustafa-zidan)
