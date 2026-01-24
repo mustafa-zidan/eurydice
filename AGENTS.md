@@ -1,42 +1,174 @@
-### Orpheus TTS Development Guide
+### Orpheus TTS - AI Agent Guidelines
 
-This document provides essential information for developers working on the `orpheus-tts` project.
+#### Overview
+This document defines the workflow for AI coding agents working on orpheus-tts.
 
----
-
-### 1. Build & Configuration
-
-The project uses `hatchling` as the build backend and `uv` or `pip` for dependency management.
-
-#### Environment Setup
-- **Base installation**: `uv sync`
-- **With audio support**: `uv sync --extra audio`
-- **With full development tools**: `uv sync --all-extras`
-
-#### Key Dependencies
-- `httpx`: Used for provider communication (e.g., LM Studio).
-- `snac`, `torch`, `numpy`: Required for audio decoding.
-- `transformers`, `accelerate`: Required for the embedded provider.
+#### Tool Stack
+- **sequential-thinking**: Planning and analysis
+- **mcp-tasks**: Task management in @docs/tasks.md
+- **doc-server**: Documentation indexing
+- **bash_tool**: Running commands (tests, linters, builds)
+- **web_search**: Finding official documentation
 
 ---
 
-### 2. Testing Information
+### Workflow
+
+**Phase 1: Planning with Sequential Thinking**
+1. Use sequential-thinking MCP to analyze the request
+    - Break down requirements into concrete steps
+    - Identify dependencies and potential blockers
+    - Consider edge cases and error scenarios
+2. Document the plan in @docs/tasks.md using mcp-tasks
+    - Create granular, actionable tasks
+    - Assign priority levels
+    - Note any assumptions or open questions
+
+**Phase 2: Implementation (Plan-Code-Test-Reflect)**
+Follow the PCTR cycle for each task:
+
+* **Plan**: Review the current task and its acceptance criteria
+* **Code**: Implement the minimal solution
+    - Write clean, readable code
+    - Add inline comments for complex logic
+    - Follow project conventions in pyproject.toml
+* **Test**: Verify the implementation
+    - Run relevant unit tests
+    - Test edge cases manually if needed
+    - Check for regressions
+* **Reflect**: Evaluate the outcome
+    - Did it solve the problem completely?
+    - Are there code smells or technical debt?
+    - Update task status in @docs/tasks.md
+    - If issues are found, return to Plan phase
+
+**Phase 3: Dependency & Documentation Management**
+
+* **Never downgrade dependencies** without explicit approval
+* When encountering errors with external libraries:
+    1. Search for official documentation using web_search
+    2. Index docs with doc-server MCP and wait for completion
+    3. Search indexed docs for correct usage patterns
+    4. Implement using current dependency versions
+    5. If a version conflict is unavoidable, document it in the task and ask for guidance
+
+* **Update documentation** as you code:
+    - Keep docstrings current
+    - Update README.md for new features
+    - Add examples for non-obvious usage
+
+**Phase 4: Quality Gates & Completion**
+
+Before marking a task complete, run these commands in order:
+
+1. **Linting**: `uv run ruff check .`
+    - Must return exit code 0 (no errors)
+    - If errors found, run `uv run ruff check . --fix` to auto-fix when possible
+
+2. **Formatting**: `uv run ruff format --check --diff .`
+    - Must show no diffs (output should be empty)
+    - If diffs shown, run `uv run ruff format .` to apply formatting
+
+3. **Tests**: `pytest`
+    - All tests must pass
+    - If failures occur, analyze and fix before proceeding
+
+4. **Review**: Verify changes against task acceptance criteria
+    - Does the implementation match the plan?
+    - Are edge cases handled?
+    - Is documentation updated?
+
+5. **Update task** in @docs/tasks.md with:
+    - What was implemented
+    - What was learned
+    - Any follow-up tasks needed
+    - Mark status as complete
+
+---
+
+### Operational Guidelines
+
+#### Error Recovery Protocol
+
+When encountering errors during implementation:
+
+1. **Capture the full error message** (stack trace, line numbers)
+2. **Use sequential-thinking** to analyze the root cause
+3. **Search documentation** if library-related (follow Phase 3 process)
+4. **Update task** with error details and attempted solutions
+5. **Try alternative approach** if first attempt fails
+6. **Ask for human guidance** if blocked after 2-3 failed attempts
+
+**Do NOT:**
+- Randomly try different approaches without analysis
+- Downgrade dependencies to "fix" version conflicts
+- Skip test failures and mark tasks complete
+- Ignore linter warnings
+
+#### Tool Usage Priority
+
+Use tools in this order for each task:
+
+1. **sequential-thinking**: Before starting any task (planning phase)
+2. **mcp-tasks**: Immediately after planning (create/update tasks)
+3. **web_search + doc-server**: When encountering unknown APIs/errors
+4. **bash_tool**: For running tests, linters, building
+5. **file operations**: For implementing code changes
+6. **mcp-tasks**: After each PCTR cycle (update status and reflections)
+
+#### State Management
+
+Always maintain context by:
+- Updating @docs/tasks.md after each PCTR cycle
+- Adding reflection notes to tasks (not just completion status)
+- Documenting assumptions and decisions in task descriptions
+- Noting which documentation was consulted for each solution
+- Recording error patterns and their solutions
+
+This enables resuming work if the conversation is interrupted.
+
+#### Scope Control
+
+- Complete ONE task fully before starting another
+- If a task reveals new requirements, create a NEW task rather than expanding scope
+- Mark tasks as "blocked" if waiting on external dependencies or human input
+- Use sequential-thinking to validate if current approach aligns with original plan
+- When multiple tasks are related, complete them in dependency order
+
+---
+
+### Project-Specific Context
+
+#### Build & Configuration
+
+The project uses `hatchling` as the build backend and `uv` for dependency management.
+
+**Environment Setup:**
+- Base installation: `uv sync`
+- With audio support: `uv sync --extra audio`
+- With full development tools: `uv sync --all-extras`
+
+**Key Dependencies:**
+- `httpx`: Used for provider communication (e.g., LM Studio)
+- `snac`, `torch`, `numpy`: Required for audio decoding
+- `transformers`, `accelerate`: Required for the embedded provider
+
+#### Testing Information
 
 Testing is handled by `pytest` and `pytest-asyncio`.
 
-#### Running Tests
-- **All tests**: `pytest`
-- **Specific file**: `pytest tests/test_providers/test_base.py`
-- **With coverage**: `pytest --cov=orpheus_tts`
+**Running Tests:**
+- All tests: `pytest`
+- Specific file: `pytest tests/test_providers/test_base.py`
+- With coverage: `pytest --cov=orpheus_tts`
+- Specific test pattern: `pytest -k "test_pattern_name"`
 
-#### Adding New Tests
-- Place tests in the `tests/` directory following the naming convention `test_*.py`.
-- Use fixtures defined in `tests/conftest.py` (e.g., `mock_provider`, `memory_cache`).
-- Mark asynchronous tests with `@pytest.mark.asyncio`.
+**Adding New Tests:**
+- Place tests in `tests/` directory following the naming convention `test_*.py`
+- Use fixtures defined in `tests/conftest.py` (e.g., `mock_provider`, `memory_cache`)
+- Mark asynchronous tests with `@pytest.mark.asyncio`
 
-#### Simple Test Example
-Below is a demonstration of how to create a simple test with a mock provider.
-
+**Simple Test Example:**
 ```python
 import pytest
 from orpheus_tts import OrpheusTTS, Voice
@@ -60,18 +192,25 @@ async def test_minimal_flow():
     assert await tts.connect() is True
 ```
 
----
-
-### 3. Additional Development Information
-
 #### Code Style
-- **Linter/Formatter**: The project uses `ruff`.
-- **Line Length**: 100 characters.
-- **Type Hinting**: Mandatory for all new functions and classes.
-- **Configuration**: Managed via `pyproject.toml`.
+
+- **Linter/Formatter**: The project uses `ruff`
+- **Line Length**: 100 characters
+- **Type Hinting**: Mandatory for all new functions and classes
+- **Configuration**: Managed via `pyproject.toml`
 
 #### Provider Implementation
-To add a new inference provider, inherit from `orpheus_tts.providers.base.Provider` and implement the abstract methods. Ensure `generate_tokens` is an `AsyncIterator`.
+
+To add a new inference provider:
+- Inherit from `orpheus_tts.providers.base.Provider`
+- Implement all abstract methods
+- Ensure `generate_tokens` is an `AsyncIterator`
+- Add appropriate type hints
+- Include connection/disconnection logic
 
 #### Audio Decoding
-Audio decoding depends on the `snac` library. If you are working on the audio pipeline, ensure you have the `[audio]` extra installed.
+
+Audio decoding depends on the `snac` library. If working on the audio pipeline:
+- Ensure you have the `[audio]` extra installed: `uv sync --extra audio`
+- Test with actual audio output, not just token generation
+- Verify compatibility with different audio formats
