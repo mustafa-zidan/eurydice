@@ -10,9 +10,12 @@ from eurydice.cache.key import generate_cache_key
 from eurydice.cache.memory import MemoryCache
 from eurydice.config import GenerationParams, TTSConfig
 from eurydice.exceptions import AudioDecodingError, EurydiceError
+from eurydice.providers.auto import detect_best_provider, get_provider_info
 from eurydice.providers.base import Provider
 from eurydice.providers.embedded import EmbeddedProvider
 from eurydice.providers.lmstudio import LMStudioProvider
+from eurydice.providers.orpheus_cpp import OrpheusCppProvider
+from eurydice.providers.vllm import VLLMProvider
 from eurydice.types import AudioFormat, AudioResult, Voice
 
 
@@ -45,6 +48,8 @@ class Eurydice:
     PROVIDERS: dict[str, type[Provider]] = {
         "lmstudio": LMStudioProvider,
         "embedded": EmbeddedProvider,
+        "orpheus-cpp": OrpheusCppProvider,
+        "vllm": VLLMProvider,
     }
 
     def __init__(
@@ -83,15 +88,74 @@ class Eurydice:
 
     def _create_provider(self) -> Provider:
         """Create provider instance from config."""
-        provider_cls = self.PROVIDERS.get(self.config.provider)
+        provider_name = self.config.provider
+
+        # Handle auto-detection
+        if provider_name == "auto":
+            provider_name = detect_best_provider()
+
+        provider_cls = self.PROVIDERS.get(provider_name)
         if not provider_cls:
-            raise EurydiceError(f"Unknown provider: {self.config.provider}")
+            raise EurydiceError(f"Unknown provider: {provider_name}")
 
         return provider_cls(
             server_url=self.config.get_server_url(),
             model=self.config.model,
             timeout=self.config.timeout,
         )
+
+    async def _generate_from_token_provider(
+        self,
+        text: str,
+        voice: Voice,
+        params: GenerationParams,
+    ) -> list[bytes]:
+        """Generate audio from a provider that yields tokens."""
+        # Initialize decoder if needed
+        if self._decoder is None:
+            if not is_audio_available():
+                raise EurydiceError(
+                    "Audio dependencies not installed. Install with: pip install eurydice[audio]"
+                )
+            self._decoder = SNACDecoder()
+
+        # Reset token processor
+        self._token_processor.reset()
+
+        audio_segments = []
+
+        async for token in self._provider.generate_tokens(text, voice, params):
+            token_id = self._token_processor.process_token(token)
+
+            if token_id is not None and self._token_processor.has_complete_frame():
+                frame_tokens = self._token_processor.get_frame_tokens()
+                audio_bytes = self._decoder.decode_frame(frame_tokens)
+
+                if audio_bytes:
+                    audio_segments.append(audio_bytes)
+
+        return audio_segments
+
+    async def _generate_from_audio_provider(
+        self,
+        text: str,
+        voice: Voice,
+        params: GenerationParams,
+    ) -> list[bytes]:
+        """Generate audio from a provider that yields audio chunks directly."""
+        audio_segments = []
+
+        # Provider must have generate_audio method
+        if not hasattr(self._provider, "generate_audio"):
+            raise EurydiceError(
+                f"Provider {self._provider.name} marked as yields_audio but missing generate_audio()"
+            )
+
+        async for audio_chunk in self._provider.generate_audio(text, voice, params):
+            if audio_chunk:
+                audio_segments.append(audio_chunk)
+
+        return audio_segments
 
     async def connect(self) -> bool:
         """
@@ -140,28 +204,11 @@ class Eurydice:
             if cached:
                 return cached
 
-        # Initialize decoder if needed
-        if self._decoder is None:
-            if not is_audio_available():
-                raise EurydiceError(
-                    "Audio dependencies not installed. Install with: pip install eurydice[audio]"
-                )
-            self._decoder = SNACDecoder()
-
-        # Reset token processor
-        self._token_processor.reset()
-
-        audio_segments = []
-
-        async for token in self._provider.generate_tokens(text, voice, params):
-            token_id = self._token_processor.process_token(token)
-
-            if token_id is not None and self._token_processor.has_complete_frame():
-                frame_tokens = self._token_processor.get_frame_tokens()
-                audio_bytes = self._decoder.decode_frame(frame_tokens)
-
-                if audio_bytes:
-                    audio_segments.append(audio_bytes)
+        # Check if the provider yields audio directly (e.g., OrpheusCppProvider)
+        if getattr(self._provider, "yields_audio", False):
+            audio_segments = await self._generate_from_audio_provider(text, voice, params)
+        else:
+            audio_segments = await self._generate_from_token_provider(text, voice, params)
 
         if not audio_segments:
             raise AudioDecodingError("No audio generated. Check if Orpheus model is loaded.")
@@ -270,6 +317,26 @@ class Eurydice:
     def is_audio_available() -> bool:
         """Check if audio dependencies are installed."""
         return is_audio_available()
+
+    @staticmethod
+    def available_providers() -> dict[str, dict]:
+        """
+        Get information about all available providers.
+
+        Returns:
+            Dict mapping provider names to their availability info
+        """
+        return get_provider_info()
+
+    @staticmethod
+    def detect_best_provider() -> str:
+        """
+        Detect the best available provider based on installed dependencies.
+
+        Returns:
+            Provider name string
+        """
+        return detect_best_provider()
 
 
 # Backwards compatibility alias

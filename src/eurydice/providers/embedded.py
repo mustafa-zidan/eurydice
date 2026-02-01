@@ -30,10 +30,11 @@ def _check_dependencies() -> None:
 
 class EmbeddedProvider(Provider):
     """
-    Embedded inference provider for running Orpheus model locally.
+    Embedded inference provider for running an Orpheus model locally.
 
     This provider loads the Orpheus TTS model directly using transformers,
     allowing text-to-speech generation without requiring an external server.
+    Uses model.generate() with TextIteratorStreamer for efficient KV-cached inference.
 
     Example:
         provider = EmbeddedProvider(model="canopylabs/orpheus-3b-0.1-ft")
@@ -82,7 +83,7 @@ class EmbeddedProvider(Provider):
         return "cpu"
 
     def _get_torch_dtype(self):
-        """Get the torch dtype from string specification."""
+        """Get the torch dtype from a string specification."""
         import torch
 
         if self._torch_dtype == "auto":
@@ -119,7 +120,7 @@ class EmbeddedProvider(Provider):
             low_cpu_mem_usage=True,
         )
 
-        # Move to device if not using device_map
+        # Move to the device if not using device_map
         if device == "cpu":
             self._model = self._model.to(device)
 
@@ -131,11 +132,11 @@ class EmbeddedProvider(Provider):
         Load the model and verify it's ready for inference.
 
         Returns:
-            True if model loaded successfully
+            True if the model loaded successfully
         """
         try:
             if not self._loaded:
-                # Run model loading in thread pool to avoid blocking
+                # Run model loading in the thread pool to avoid blocking
                 loop = asyncio.get_event_loop()
                 await loop.run_in_executor(None, self._load_model)
             return True
@@ -151,6 +152,9 @@ class EmbeddedProvider(Provider):
         """
         Stream tokens from the locally loaded model.
 
+        Uses model.generate() with TextIteratorStreamer for efficient
+        KV-cached inference.
+
         Args:
             text: Text to convert to speech
             voice: Voice to use
@@ -162,94 +166,55 @@ class EmbeddedProvider(Provider):
         if not self._loaded or self._model is None or self._tokenizer is None:
             raise ProviderError("Model not loaded. Call connect() first.")
 
+        from transformers import TextIteratorStreamer
+
         prompt = self._format_prompt(text, voice)
 
         # Tokenize input
         inputs = self._tokenizer(prompt, return_tensors="pt")
         inputs = {k: v.to(self._model.device) for k, v in inputs.items()}
 
-        # Generate tokens using streaming
+        # Create a streamer for token-by-token output
+        streamer = TextIteratorStreamer(
+            self._tokenizer,
+            skip_prompt=True,
+            skip_special_tokens=False,
+        )
+
+        # Generation kwargs
+        generation_kwargs = {
+            **inputs,
+            "streamer": streamer,
+            "max_new_tokens": params.max_tokens,
+            "temperature": params.temperature,
+            "top_p": params.top_p,
+            "repetition_penalty": params.repetition_penalty,
+            "do_sample": True,
+            "pad_token_id": self._tokenizer.eos_token_id,
+        }
+
+        # Run generation in the background thread
         loop = asyncio.get_event_loop()
 
-        # Use a queue for async streaming
-        token_queue: asyncio.Queue[str | None] = asyncio.Queue()
+        def _generate():
+            import torch
 
-        async def generate_in_thread():
-            """Run generation in thread and put tokens in queue."""
+            with torch.no_grad():
+                self._model.generate(**generation_kwargs)
 
-            def _generate():
-                import torch
+        # Start generation in a thread pool
+        gen_future = loop.run_in_executor(None, _generate)
 
-                with torch.no_grad():
-                    generated_ids = inputs["input_ids"].clone()
-
-                    for _ in range(params.max_tokens):
-                        outputs = self._model(
-                            input_ids=generated_ids,
-                            use_cache=True,
-                        )
-                        next_token_logits = outputs.logits[:, -1, :]
-
-                        # Apply temperature
-                        if params.temperature > 0:
-                            next_token_logits = next_token_logits / params.temperature
-
-                        # Apply top_p (nucleus) sampling
-                        if params.top_p < 1.0:
-                            sorted_logits, sorted_indices = torch.sort(
-                                next_token_logits, descending=True
-                            )
-                            cumulative_probs = torch.cumsum(
-                                torch.softmax(sorted_logits, dim=-1), dim=-1
-                            )
-                            sorted_indices_to_remove = cumulative_probs > params.top_p
-                            sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[
-                                ..., :-1
-                            ].clone()
-                            sorted_indices_to_remove[..., 0] = 0
-
-                            indices_to_remove = sorted_indices_to_remove.scatter(
-                                1, sorted_indices, sorted_indices_to_remove
-                            )
-                            next_token_logits[indices_to_remove] = float("-inf")
-
-                        # Sample next token
-                        probs = torch.softmax(next_token_logits, dim=-1)
-                        next_token = torch.multinomial(probs, num_samples=1)
-
-                        # Check for end of sequence
-                        if next_token.item() == self._tokenizer.eos_token_id:
-                            break
-
-                        generated_ids = torch.cat([generated_ids, next_token], dim=-1)
-
-                        # Decode just the new token
-                        token_str = self._tokenizer.decode(
-                            next_token[0], skip_special_tokens=False
-                        )
-
-                        # Put token in queue (blocking call from sync context)
-                        asyncio.run_coroutine_threadsafe(
-                            token_queue.put(token_str), loop
-                        ).result()
-
-                # Signal completion
-                asyncio.run_coroutine_threadsafe(token_queue.put(None), loop).result()
-
-            await loop.run_in_executor(None, _generate)
-
-        # Start generation task
-        gen_task = asyncio.create_task(generate_in_thread())
-
-        # Yield tokens as they arrive
+        # Stream tokens as they arrive
         try:
-            while True:
-                token = await token_queue.get()
-                if token is None:
-                    break
-                yield token
+            for token_text in streamer:
+                if token_text:
+                    yield token_text
+                # Allow other async tasks to run
+                await asyncio.sleep(0)
         finally:
-            await gen_task
+            # Ensure generation completes
+            await gen_future
 
     def _format_prompt(self, text: str, voice: Voice) -> str:
         """Format prompt with voice and special tokens."""

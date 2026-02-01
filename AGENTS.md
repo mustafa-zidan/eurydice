@@ -1,7 +1,7 @@
-### Orpheus TTS - AI Agent Guidelines
+### Eurydice TTS - AI Agent Guidelines
 
 #### Overview
-This document defines the workflow for AI coding agents working on orpheus-tts.
+This document defines the workflow for AI coding agents working on eurydice-tts.
 
 #### Tool Stack
 - **sequential-thinking**: Planning and analysis
@@ -96,7 +96,7 @@ When encountering errors during implementation:
 2. **Use sequential-thinking** to analyze the root cause
 3. **Search documentation** if library-related (follow Phase 3 process)
 4. **Update task** with error details and attempted solutions
-5. **Try alternative approach** if first attempt fails
+5. **Try an alternative approach** if the first attempt fails
 6. **Ask for human guidance** if blocked after 2-3 failed attempts
 
 **Do NOT:**
@@ -132,7 +132,7 @@ This enables resuming work if the conversation is interrupted.
 - Complete ONE task fully before starting another
 - If a task reveals new requirements, create a NEW task rather than expanding scope
 - Mark tasks as "blocked" if waiting on external dependencies or human input
-- Use sequential-thinking to validate if current approach aligns with original plan
+- Use sequential-thinking to validate if the current approach aligns with the original plan
 - When multiple tasks are related, complete them in dependency order
 
 ---
@@ -160,7 +160,7 @@ Testing is handled by `pytest` and `pytest-asyncio`.
 **Running Tests:**
 - All tests: `pytest`
 - Specific file: `pytest tests/test_providers/test_base.py`
-- With coverage: `pytest --cov=orpheus_tts`
+- With coverage: `pytest --cov=eurydice-tts`
 - Specific test pattern: `pytest -k "test_pattern_name"`
 
 **Adding New Tests:**
@@ -171,9 +171,9 @@ Testing is handled by `pytest` and `pytest-asyncio`.
 **Simple Test Example:**
 ```python
 import pytest
-from orpheus_tts import OrpheusTTS, Voice
-from orpheus_tts.providers.base import Provider
-from orpheus_tts.config import GenerationParams
+from eurydice import Eurydice, Voice
+from eurydice.providers.base import Provider
+from eurydice.config import GenerationParams
 from typing import AsyncIterator
 
 class SimpleMockProvider(Provider):
@@ -188,7 +188,7 @@ class SimpleMockProvider(Provider):
 @pytest.mark.asyncio
 async def test_minimal_flow():
     provider = SimpleMockProvider()
-    tts = OrpheusTTS(provider=provider)
+    tts = Eurydice(provider=provider)
     assert await tts.connect() is True
 ```
 

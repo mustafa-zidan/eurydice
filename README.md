@@ -13,7 +13,8 @@ A Python library for text-to-speech using the Orpheus TTS model, featuring audio
 
 - 🎤 **8 High-Quality Voices** - tara, leah, jess, leo, dan, mia, zac, zoe
 - ⚡ **Audio Caching** - Memory and filesystem caching to avoid regenerating audio
-- 🔌 **Provider Abstraction** - Support for LM Studio and embedded local inference
+- 🔌 **Multiple Providers** - vLLM (CUDA), orpheus-cpp (CPU/Metal), embedded (transformers), LM Studio
+- 🔍 **Auto-Detection** - Automatically selects the best available provider
 - 🔄 **Async-First** - Built for async/await with sync wrappers for convenience
 - 📦 **Type Hints** - Full type annotations throughout
 - 🧪 **Well Tested** - Comprehensive test suite
@@ -27,8 +28,14 @@ uv add eurydice-tts
 # With audio decoding support (recommended)
 uv add eurydice-tts[audio]
 
-# With embedded model support (runs locally, no external server needed)
+# With embedded model support (transformers, requires GPU)
 uv add eurydice-tts[embedded]
+
+# With orpheus-cpp support (llama.cpp, fast CPU/Metal inference)
+uv add eurydice-tts[cpp]
+
+# With vLLM support (CUDA GPU, fastest inference)
+uv add eurydice-tts[vllm]
 
 # For development
 uv add eurydice-tts[dev]
@@ -39,7 +46,23 @@ uv add eurydice-tts[all]
 
 ## Quick Start
 
-### Prerequisites
+### Recommended: Auto-Detection
+
+Eurydice can automatically detect and use the best available provider:
+
+```python
+from eurydice import Eurydice, TTSConfig, Voice
+
+# Auto-detect provider (vLLM > orpheus-cpp > embedded > lmstudio)
+config = TTSConfig(provider="auto")
+async with Eurydice(config) as tts:
+    audio = await tts.generate("Hello, world!", voice=Voice.LEO)
+    audio.save("hello.wav")
+```
+
+### Alternative: LM Studio
+
+If using LM Studio as your provider:
 
 1. Install [LM Studio](https://lmstudio.ai/)
 2. Download and load the Orpheus TTS model (`orpheus-3b-0.1-ft`)
@@ -231,6 +254,61 @@ This ensures that different configurations produce different cache entries.
 
 ## Providers
 
+### Auto-Detection (Recommended)
+
+Let Eurydice automatically select the best available provider:
+
+```python
+from eurydice import Eurydice, TTSConfig
+
+# Auto-detect the best provider
+config = TTSConfig(provider="auto")
+async with Eurydice(config) as tts:
+    audio = await tts.generate("Hello with auto-detected provider!")
+    audio.save("hello.wav")
+
+# Check what providers are available
+print(Eurydice.available_providers())
+# {'vllm': {'available': True, ...}, 'orpheus-cpp': {'available': False, ...}, ...}
+
+# See which provider would be selected
+print(Eurydice.detect_best_provider())
+# 'vllm' (if CUDA available) or 'orpheus-cpp' (if installed) or 'embedded' or 'lmstudio'
+```
+
+**Provider priority:** vLLM (CUDA) > orpheus-cpp (CPU/Metal) > embedded (transformers) > LM Studio
+
+### vLLM Provider (Fastest, CUDA Required)
+
+The fastest option for NVIDIA GPUs. Uses vLLM for optimized inference:
+
+```python
+from eurydice import Eurydice, TTSConfig
+
+# Using config
+config = TTSConfig(provider="vllm")
+async with Eurydice(config) as tts:
+    audio = await tts.generate("Hello from vLLM!")
+    audio.save("hello.wav")
+
+# Or with custom options
+from eurydice import VLLMProvider
+
+provider = VLLMProvider(
+    model="canopylabs/orpheus-tts-0.1-finetune-prod",
+    max_model_len=8192,
+    dtype="bfloat16",  # or "float16", "float32"
+)
+
+async with Eurydice(provider=provider) as tts:
+    audio = await tts.generate("Fast GPU inference!")
+```
+
+**Requirements:**
+- Install with `uv add eurydice-tts[vllm]`
+- NVIDIA GPU with CUDA support
+- Sufficient VRAM (8GB+ recommended)
+
 ### LM Studio (Default)
 
 Uses the OpenAI-compatible API provided by LM Studio:
@@ -273,9 +351,37 @@ async with Eurydice(provider=provider) as tts:
 
 **Device auto-detection:** If no device is specified, the provider automatically detects the best available device (CUDA > MPS > CPU).
 
-### Coming Soon
+### Orpheus-cpp Provider (Recommended for CPU/Metal)
 
-- **Ollama Provider** - For Ollama-hosted models
+The fastest option for CPU and Apple Silicon. Uses llama.cpp under the hood with optimized GGUF models:
+
+```python
+from eurydice import Eurydice, TTSConfig
+
+# Using config
+config = TTSConfig(provider="orpheus-cpp")
+async with Eurydice(config) as tts:
+    audio = await tts.generate("Hello from llama.cpp!")
+    audio.save("hello.wav")
+
+# Or with custom options
+from eurydice import OrpheusCppProvider
+
+provider = OrpheusCppProvider(
+    model_path="/path/to/model.gguf",  # Optional, auto-downloads if not specified
+    verbose=False,
+    lang="en",
+)
+
+async with Eurydice(provider=provider) as tts:
+    audio = await tts.generate("Fast inference!")
+```
+
+**Requirements:** Install with `uv add eurydice-tts[cpp]`
+
+**Platform support:**
+- Linux/Windows: CPU inference
+- macOS with Apple Silicon: Metal acceleration (very fast)
 
 ## Examples
 
@@ -330,6 +436,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Orpheus TTS](https://github.com/canopyai/Orpheus-TTS) - The underlying TTS model
 - [SNAC](https://github.com/hubertsiuzdak/snac) - Neural audio codec
+- [vLLM](https://github.com/vllm-project/vllm) - High-throughput LLM serving
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) - CPU/Metal inference via orpheus-cpp
 - [LM Studio](https://lmstudio.ai/) - Local LLM inference server
 
 ---

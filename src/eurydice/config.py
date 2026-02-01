@@ -51,5 +51,8 @@ class TTSConfig:
             "lmstudio": "http://localhost:1234/v1",
             "ollama": "http://localhost:11434",
             "embedded": "",
+            "orpheus-cpp": "",
+            "vllm": "",
+            "auto": "",
         }
         return defaults.get(self.provider, "http://localhost:1234/v1")

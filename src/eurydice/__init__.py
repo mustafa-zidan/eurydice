@@ -61,7 +61,13 @@ from eurydice.exceptions import (
 )
 
 # Providers
-from eurydice.providers import EmbeddedProvider, LMStudioProvider, Provider
+from eurydice.providers import (
+    EmbeddedProvider,
+    LMStudioProvider,
+    OrpheusCppProvider,
+    Provider,
+    VLLMProvider,
+)
 from eurydice.types import AudioFormat, AudioResult, Voice
 
 __version__ = "0.1.0"
@@ -92,6 +98,8 @@ __all__ = [
     "Provider",
     "EmbeddedProvider",
     "LMStudioProvider",
+    "OrpheusCppProvider",
+    "VLLMProvider",
     # Cache
     "Cache",
     "MemoryCache",

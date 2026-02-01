@@ -106,8 +106,12 @@ By participating in this project, you agree to maintain a respectful and inclusi
 ### Example
 
 ```python
+from typing import Optional
+from eurydice.types import  AudioResult, Voice
+from eurydice.config import  GenerationParams
+
 async def generate_speech(
-    text: str,
+    text: str, 
     voice: Voice = Voice.LEO,
     params: Optional[GenerationParams] = None,
 ) -> AudioResult:
@@ -164,7 +168,7 @@ pytest tests/test_types.py::TestVoice::test_all_voices_exist -v
 
 ```bash
 # Install docs dependencies
-uv pip install -e ".[docs]"
+uv sync --extras docs"
 
 # Serve documentation locally
 mkdocs serve
@@ -220,4 +224,4 @@ Releases are handled by maintainers:
 - Open a [GitHub Discussion](https://github.com/mustafa-zidan/eurydice/discussions)
 - Check existing [Issues](https://github.com/mustafa-zidan/eurydice/issues)
 
-Thank you for contributing! 🎵
+Thank you for contributing!
