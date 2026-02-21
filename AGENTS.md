@@ -139,78 +139,31 @@ This enables resuming work if the conversation is interrupted.
 
 ### Project-Specific Context
 
-#### Build & Configuration
+#### Providers & Platform Constraints
 
-The project uses `hatchling` as the build backend and `uv` for dependency management.
+| Provider      | Backend               | Platform         | Extra      |
+|---------------|-----------------------|------------------|------------|
+| `orpheus`     | HTTP (server)         | All              | (base)     |
+| `embedded`    | transformers          | CPU / MPS / CUDA | `embedded` |
+| `orpheus-cpp` | llama.cpp             | CPU / Metal      | `cpp`      |
+| `vllm`        | vLLM + orpheus-speech | CUDA only        | `vllm`     |
 
-**Environment Setup:**
-- Base installation: `uv sync`
-- With audio support: `uv sync --extra audio`
-- With full development tools: `uv sync --all-extras`
+**VLLMProvider** (`eurydice/providers/vllm.py`):
+- Requires CUDA — raises `DependencyError` if `torch.cuda.is_available()` is False.
+- `yields_audio = True` — bypasses the token pipeline; `generate_tokens()` always raises `ProviderError`.
+- `generate_audio()` runs `_orpheus_model.generate_speech()` in a thread pool and bridges chunks back via `asyncio.Queue`.
+- Audio chunks may arrive as `bytes` *or* numpy arrays (float32/float64 → int16 scaled; other dtypes cast directly).
 
-**Key Dependencies:**
-- `httpx`: Used for provider communication (e.g., LM Studio)
-- `snac`, `torch`, `numpy`: Required for audio decoding
-- `transformers`, `accelerate`: Required for the embedded provider
+#### Testing VLLMProvider
 
-#### Testing Information
+**On Mac (no CUDA)**
+- All unit and mock-integration tests in `tests/test_providers/test_vllm.py` run normally — CUDA is mocked via `patch.dict(sys.modules, {"torch": mock_torch})`.
+- Run: `uv run pytest tests/test_providers/test_vllm.py`
 
-Testing is handled by `pytest` and `pytest-asyncio`.
+**GPU / CUDA tests (requires NVIDIA GPU)**
+- Mark real CUDA tests with `@pytest.mark.cuda`.
+- Run only those: `uv run pytest -m cuda`
+- Triggered via the manual `test-gpu` GitHub Actions workflow (`workflow_dispatch`).
+- The GPU workflow installs the `vllm` extra and uses a `[self-hosted, gpu]` runner.
+- To add a self-hosted GPU runner: Settings → Actions → Runners → New self-hosted runner.
 
-**Running Tests:**
-- All tests: `pytest`
-- Specific file: `pytest tests/test_providers/test_base.py`
-- With coverage: `pytest --cov=eurydice-tts`
-- Specific test pattern: `pytest -k "test_pattern_name"`
-
-**Adding New Tests:**
-- Place tests in `tests/` directory following the naming convention `test_*.py`
-- Use fixtures defined in `tests/conftest.py` (e.g., `mock_provider`, `memory_cache`)
-- Mark asynchronous tests with `@pytest.mark.asyncio`
-
-**Simple Test Example:**
-```python
-import pytest
-from eurydice import Eurydice, Voice
-from eurydice.providers.base import Provider
-from eurydice.config import GenerationParams
-from typing import AsyncIterator
-
-class SimpleMockProvider(Provider):
-    @property
-    def name(self) -> str: return "mock"
-    async def connect(self) -> bool: return True
-    async def close(self) -> None: pass
-    async def generate_tokens(self, text, voice, params) -> AsyncIterator[str]:
-        for token in ["test", "tokens"]:
-            yield token
-
-@pytest.mark.asyncio
-async def test_minimal_flow():
-    provider = SimpleMockProvider()
-    tts = Eurydice(provider=provider)
-    assert await tts.connect() is True
-```
-
-#### Code Style
-
-- **Linter/Formatter**: The project uses `ruff`
-- **Line Length**: 100 characters
-- **Type Hinting**: Mandatory for all new functions and classes
-- **Configuration**: Managed via `pyproject.toml`
-
-#### Provider Implementation
-
-To add a new inference provider:
-- Inherit from `orpheus_tts.providers.base.Provider`
-- Implement all abstract methods
-- Ensure `generate_tokens` is an `AsyncIterator`
-- Add appropriate type hints
-- Include connection/disconnection logic
-
-#### Audio Decoding
-
-Audio decoding depends on the `snac` library. If working on the audio pipeline:
-- Ensure you have the `[audio]` extra installed: `uv sync --extra audio`
-- Test with actual audio output, not just token generation
-- Verify compatibility with different audio formats

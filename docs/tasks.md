@@ -28,3 +28,4 @@
 - [x] Implement provider auto-detection logic
 - [x] Add tests for VLLMProvider
 - [x] Add tests for auto-detection
+- [x] Add missing VLLMProvider unit tests (generate_audio streaming, numpy conversion, error paths) and GPU CI workflow for GitHub Actions
