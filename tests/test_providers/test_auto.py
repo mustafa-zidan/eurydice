@@ -74,15 +74,9 @@ class TestDetectBestProvider:
     def test_fallback_to_lmstudio(self):
         """Test fallback to lmstudio when nothing else is available."""
         with (
-            patch(
-                "eurydice.providers.auto._is_vllm_available", return_value=False
-            ),
-            patch(
-                "eurydice.providers.auto._is_orpheus_cpp_available", return_value=False
-            ),
-            patch(
-                "eurydice.providers.auto._is_embedded_available", return_value=False
-            ),
+            patch("eurydice.providers.auto._is_vllm_available", return_value=False),
+            patch("eurydice.providers.auto._is_orpheus_cpp_available", return_value=False),
+            patch("eurydice.providers.auto._is_embedded_available", return_value=False),
         ):
             result = detect_best_provider()
             assert result == "lmstudio"
@@ -91,12 +85,8 @@ class TestDetectBestProvider:
         """Test that vLLM is preferred when available."""
         with (
             patch("eurydice.providers.auto._is_vllm_available", return_value=True),
-            patch(
-                "eurydice.providers.auto._is_orpheus_cpp_available", return_value=True
-            ),
-            patch(
-                "eurydice.providers.auto._is_embedded_available", return_value=True
-            ),
+            patch("eurydice.providers.auto._is_orpheus_cpp_available", return_value=True),
+            patch("eurydice.providers.auto._is_embedded_available", return_value=True),
         ):
             result = detect_best_provider()
             assert result == "vllm"
@@ -105,12 +95,8 @@ class TestDetectBestProvider:
         """Test that orpheus-cpp is preferred when vLLM not available."""
         with (
             patch("eurydice.providers.auto._is_vllm_available", return_value=False),
-            patch(
-                "eurydice.providers.auto._is_orpheus_cpp_available", return_value=True
-            ),
-            patch(
-                "eurydice.providers.auto._is_embedded_available", return_value=True
-            ),
+            patch("eurydice.providers.auto._is_orpheus_cpp_available", return_value=True),
+            patch("eurydice.providers.auto._is_embedded_available", return_value=True),
         ):
             result = detect_best_provider()
             assert result == "orpheus-cpp"
@@ -119,12 +105,8 @@ class TestDetectBestProvider:
         """Test that embedded is preferred when orpheus-cpp not available."""
         with (
             patch("eurydice.providers.auto._is_vllm_available", return_value=False),
-            patch(
-                "eurydice.providers.auto._is_orpheus_cpp_available", return_value=False
-            ),
-            patch(
-                "eurydice.providers.auto._is_embedded_available", return_value=True
-            ),
+            patch("eurydice.providers.auto._is_orpheus_cpp_available", return_value=False),
+            patch("eurydice.providers.auto._is_embedded_available", return_value=True),
         ):
             result = detect_best_provider()
             assert result == "embedded"

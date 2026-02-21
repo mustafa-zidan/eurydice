@@ -166,4 +166,3 @@ This enables resuming work if the conversation is interrupted.
 - Triggered via the manual `test-gpu` GitHub Actions workflow (`workflow_dispatch`).
 - The GPU workflow installs the `vllm` extra and uses a `[self-hosted, gpu]` runner.
 - To add a self-hosted GPU runner: Settings → Actions → Runners → New self-hosted runner.
-

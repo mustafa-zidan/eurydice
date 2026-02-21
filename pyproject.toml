@@ -68,7 +68,11 @@ docs = [
     "mkdocstrings[python]>=0.24.0",
 ]
 
-all = [
+all-nocuda = [
+    "eurydice-tts[audio,embedded,cpp,dev,docs]",
+]
+
+all-cuda = [
     "eurydice-tts[audio,embedded,cpp,vllm,dev,docs]",
 ]
 
@@ -81,7 +85,7 @@ Changelog = "https://github.com/mustafa-zidan/eurydice/blob/main/CHANGELOG.md"
 
 [tool.hatch.version]
 source = "vcs"
-fallback-version = "0.1.0"
+fallback-version = "0.2.0"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/eurydice"]
@@ -110,7 +114,7 @@ markers = [
 
 [tool.ruff]
 line-length = 100
-target-version = "py310"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B", "SIM"]
@@ -120,7 +124,7 @@ ignore = ["E501"]
 convention = "google"
 
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_ignores = true
 
