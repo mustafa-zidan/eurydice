@@ -1,72 +1,59 @@
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-._*
+# .aiignore - Exclude files and folders from AI Assistant processing
 
-# IntelliJ IDEA
-.idea/
-*.iml
-*.ipr
-*.iws
-out/
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual environments
+# Virtual environments and dependencies
 .venv/
 venv/
-ENV/
 env/
+.env/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
 
-# pytest / coverage
-.pytest_cache/
-.coverage
-.coverage.*
-htmlcov/
+# uv specific
+uv.lock
+
+# Package manager and build artifacts
 .tox/
-.nox/
+.pytest_cache/
+htmlcov/
+.coverage
+*.egg
 
-# mypy / type checkers
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pytype/
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+*.iml
 
-# Ruff
-.ruff_cache/
-
-# Jupyter
-.ipynb_checkpoints/
-
-# Environment variables
+# Environment and secrets
 .env
 .env.*
-!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+config/secrets.yml
 
-# Logs
-*.log
+# Test and log files
+tests/__pycache__/
+test-results/
+allure-results/
 logs/
+*.log
+*.tmp
 
-# Local development
-.local/
+# Generated documentation
+docs/_build/
+site/
+
+# Temporary files and OS
+.cache/
+*.bak
+*.orig
