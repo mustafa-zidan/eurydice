@@ -68,26 +68,35 @@ jobs:
       - name: Generate release notes
         id: release_notes
         run: |
-          echo "## What's Changed" > release_notes.md
-          echo "" >> release_notes.md
-          # Get commits since last tag
-          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          if [ -n "$LAST_TAG" ]; then
-            git log --pretty=format:"- %s (%h)" $LAST_TAG..HEAD >> release_notes.md
+          VERSION="${{ inputs.version }}"
+
+          # Escape dots so the version string is treated as a literal in awk regex
+          VER_REGEX="${VERSION//./\\.}"
+
+          # Extract the section for this version from CHANGELOG.md.
+          # Matches "## [X.Y.Z]" or "## [X.Y.Z] - YYYY-MM-DD" and prints
+          # everything up to (but not including) the next "## [" heading.
+          NOTES=$(awk -v ver="$VER_REGEX" '
+            /^## / && found { exit }
+            $0 ~ ("^## \\[" ver "\\]") { found=1; next }
+            found { print }
+          ' CHANGELOG.md)
+
+          if [ -z "$(printf '%s' "$NOTES" | tr -d '[:space:]')" ]; then
+            echo "::warning::No CHANGELOG.md entry found for v${VERSION}. Falling back to git log."
+            printf "## What's Changed\n\n" > release_notes.md
+            LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+            if [ -n "$LAST_TAG" ]; then
+              git log --pretty=format:"- %s (%h)" "${LAST_TAG}..HEAD" >> release_notes.md
+            else
+              git log --pretty=format:"- %s (%h)" >> release_notes.md
+            fi
           else
-            git log --pretty=format:"- %s (%h)" >> release_notes.md
+            printf '%s\n' "$NOTES" > release_notes.md
           fi
-          echo "" >> release_notes.md
-          echo "## Installation" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "\`\`\`bash" >> release_notes.md
-          echo "pip install eurydice-tts==${{ inputs.version }}" >> release_notes.md
-          echo "\`\`\`" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "Or with uv:" >> release_notes.md
-          echo "\`\`\`bash" >> release_notes.md
-          echo "uv add eurydice-tts==${{ inputs.version }}" >> release_notes.md
-          echo "\`\`\`" >> release_notes.md
+
+          printf '\n## Installation\n\n```bash\npip install eurydice-tts==%s\n```\n\nOr with uv:\n```bash\nuv add eurydice-tts==%s\n```\n' \
+            "$VERSION" "$VERSION" >> release_notes.md
 
       - name: Sign distributions with Sigstore
         uses: sigstore/gh-action-sigstore-python@v3.2.0
