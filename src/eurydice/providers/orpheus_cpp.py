@@ -161,12 +161,12 @@ class OrpheusCppProvider(Provider):
         audio_queue: asyncio.Queue[bytes | None] = asyncio.Queue()
 
         def _generate():
-            """Run generation in thread and put audio chunks in queue."""
+            """Run generation in a thread and put audio chunks in the queue."""
             try:
                 for _sample_rate, chunk in self._orpheus.stream_tts_sync(text, options=options):
                     # Convert numpy array to int16 PCM bytes
                     if isinstance(chunk, np.ndarray):
-                        # Ensure proper shape and dtype
+                        # Ensure the proper shape and dtype
                         audio_data = chunk.flatten()
                         if audio_data.dtype != np.int16:
                             # Normalize float to int16
