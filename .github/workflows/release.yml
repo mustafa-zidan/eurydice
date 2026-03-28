@@ -99,7 +99,7 @@ jobs:
             "$VERSION" "$VERSION" >> release_notes.md
 
       - name: Sign distributions with Sigstore
-        uses: sigstore/gh-action-sigstore-python@v3.2.0
+        uses: sigstore/gh-action-sigstore-python@v3.3.0
         with:
           inputs: ./dist/*.tar.gz ./dist/*.whl
 
