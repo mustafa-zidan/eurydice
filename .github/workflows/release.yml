@@ -24,7 +24,7 @@ jobs:
       name: pypi
       url: https://pypi.org/p/eurydice-tts
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -99,7 +99,7 @@ jobs:
             "$VERSION" "$VERSION" >> release_notes.md
 
       - name: Sign distributions with Sigstore
-        uses: sigstore/gh-action-sigstore-python@v3.3.0
+        uses: sigstore/gh-action-sigstore-python@v3.4.0
         with:
           inputs: ./dist/*.tar.gz ./dist/*.whl
 
